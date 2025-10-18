@@ -35,6 +35,8 @@ public class Robot extends Component {
 	private transient boolean blocked;
 	
 	private Position memorizedTargetPosition;
+
+	private Position nextPositionLivelock;
 	
 	private FactoryPathFinder pathFinder;
 
@@ -119,60 +121,101 @@ public class Robot extends Component {
 	}
 	
 	private int moveToNextPathPosition() {
-		final Motion motion = computeMotion();
-		
-		final int displacement = motion == null ? 0 : motion.moveToTarget();
-			
-		notifyObservers();
-		
-		return displacement;
+        Motion motion = computeMotion(null);
+        
+        int displacement = motion == null ? 0 : motion.moveToTarget();
+        
+        if (displacement != 0) {
+            notifyObservers();
+        }
+        else if (isLivelyLocked()) {
+            final Position freeNeighbouringPosition = findFreeNeighbouringPosition();
+
+            if (freeNeighbouringPosition != null){
+                // Créez un mouvement vers la position voisine et exécutez-le
+                motion = computeMotion(freeNeighbouringPosition);
+                displacement = motion == null ? 0 : motion.moveToTarget();
+                if (displacement != 0) {
+                    notifyObservers();
+                }
+                // Recalculez le chemin après vous être déplacé
+                computePathToCurrentTargetComponent();
+            }
+        }
+        return displacement;
+    }
+    
+    private Position findFreeNeighbouringPosition() {
+		Position currentPosition = getPosition();
+
+		int step = getSpeed(); 
+		Position[] neighbouringPositions = new Position[] {
+			new Position(currentPosition.getxCoordinate(), currentPosition.getyCoordinate() - step), 
+			new Position(currentPosition.getxCoordinate(), currentPosition.getyCoordinate() + step), 
+			new Position(currentPosition.getxCoordinate() - step, currentPosition.getyCoordinate()), 
+			new Position(currentPosition.getxCoordinate() + step, currentPosition.getyCoordinate())  
+		};
+
+		for (Position position : neighbouringPositions) {
+			if (!getFactory().hasMobileComponentAt(new RectangularShape(position.getxCoordinate(), 
+																		position.getyCoordinate(), 
+																		2, 2), 
+												this)) {
+				return position; 
+			}
+		}
+
+		return null;
 	}
-	
+
 	private void computePathToCurrentTargetComponent() {
-		final List<Position> currentPathPositions = pathFinder.findPath(this, currTargetComponent);
-		currentPathPositionsIter = currentPathPositions.iterator();
-	}
-	
-	private Motion computeMotion() {
-		if (!currentPathPositionsIter.hasNext()) {
+        final List<Position> currentPathPositions = pathFinder.findPath(this, currTargetComponent);
+        currentPathPositionsIter = currentPathPositions.iterator();
+    }
+    
+    private Motion computeMotion(Position target) {
+        Position targetPosition = target;
 
-			// There is no free path to the target
-			blocked = true;
-			
-			return null;
-		}
-		
-		
-		final Position targetPosition = getTargetPosition();
-		final PositionedShape shape = new RectangularShape(targetPosition.getxCoordinate(),
-														   targetPosition.getyCoordinate(),
-				   										   2,
-				   										   2);
-		
-		// If there is another robot, memorize the target position for the next run
-		if (getFactory().hasMobileComponentAt(shape, this)) {
-			this.memorizedTargetPosition = targetPosition;
-			
-			return null;
-		}
+        if (targetPosition == null) {
+            if (!currentPathPositionsIter.hasNext()) {
+                // There is no free path to the target
+                blocked = true;
+                return null;
+            }
+            targetPosition = currentPathPositionsIter.next();
+        }
+        
+        final PositionedShape shape = new RectangularShape(targetPosition.getxCoordinate(),
+                                                           targetPosition.getyCoordinate(),
+                   										   2,
+                   										   2);
+        
+        // If there is another robot, memorize the target position for the next run
+        if (getFactory().hasMobileComponentAt(shape, this)) {
+            this.memorizedTargetPosition = targetPosition;
+            
+            return null;
+        }
 
-		// Reset the memorized position
-		this.memorizedTargetPosition = null;
-			
-		return new Motion(getPosition(), targetPosition);
-	}
-	
-	private Position getTargetPosition() {
-		// If a target position was memorized, it means that the robot was blocked during the last iteration 
-		// so it waited for another robot to pass. So try to move to this memorized position otherwise move to  
-		// the next position from the path
-		return this.memorizedTargetPosition == null ? currentPathPositionsIter.next() : this.memorizedTargetPosition;
-	}
-	
-	public boolean isLivelyLocked() {
-	    if (memorizedTargetPosition == null) {
-	        return false;
-	    }
+        // Reset the memorized position
+        this.memorizedTargetPosition = null;
+            
+        return new Motion(getPosition(), targetPosition);
+    }
+    
+    /*
+    private Position getTargetPosition() {
+        // If a target position was memorized, it means that the robot was blocked during the last iteration 
+        // so it waited for another robot to pass. So try to move to this memorized position otherwise move to  
+        // the next position from the path
+        return this.memorizedTargetPosition == null ? currentPathPositionsIter.next() : nextPositionLivelock;
+    }
+    */
+    
+    public boolean isLivelyLocked() {
+        if (memorizedTargetPosition == null) {
+            return false;
+        }
 			
 	    final Component otherComponent = getFactory().getMobileComponentAt(memorizedTargetPosition,     
 	                                                                   this);
