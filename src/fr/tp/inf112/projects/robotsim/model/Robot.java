@@ -36,11 +36,11 @@ public class Robot extends Component {
 	
 	private Position memorizedTargetPosition;
 
-	private Position nextPositionLivelock;
-	
-	private FactoryPathFinder pathFinder;
+    private Position nextPosition; // Renommé de nextPositionLivelock pour correspondre à l'énoncé
+    
+    private FactoryPathFinder pathFinder;
 
-	public Robot(final Factory factory,
+    public Robot(final Factory factory,
 				 final FactoryPathFinder pathFinder,
 				 final CircularShape shape,
 				 final Battery battery,
@@ -57,6 +57,7 @@ public class Robot extends Component {
 		speed = 5;
 		blocked = false;
 		memorizedTargetPosition = null;
+		nextPosition = null; // Initialiser la nouvelle variable
 	}
 
 	@Override
@@ -121,25 +122,18 @@ public class Robot extends Component {
 	}
 	
 	private int moveToNextPathPosition() {
-        Motion motion = computeMotion(null);
-        
+        final Motion motion = computeMotion();
         int displacement = motion == null ? 0 : motion.moveToTarget();
-        
+
         if (displacement != 0) {
             notifyObservers();
         }
         else if (isLivelyLocked()) {
             final Position freeNeighbouringPosition = findFreeNeighbouringPosition();
-
-            if (freeNeighbouringPosition != null){
-                // Créez un mouvement vers la position voisine et exécutez-le
-                motion = computeMotion(freeNeighbouringPosition);
-                displacement = motion == null ? 0 : motion.moveToTarget();
-                if (displacement != 0) {
-                    notifyObservers();
-                }
-                // Recalculez le chemin après vous être déplacé
-                computePathToCurrentTargetComponent();
+            if (freeNeighbouringPosition != null) {
+                this.nextPosition = freeNeighbouringPosition; 
+                displacement = moveToNextPathPosition(); 
+                computePathToCurrentTargetComponent(); 
             }
         }
         return displacement;
@@ -173,44 +167,46 @@ public class Robot extends Component {
         currentPathPositionsIter = currentPathPositions.iterator();
     }
     
-    private Motion computeMotion(Position target) {
-        Position targetPosition = target;
-
+    private Motion computeMotion() {
+        Position targetPosition = getTargetPosition();
+        
         if (targetPosition == null) {
-            if (!currentPathPositionsIter.hasNext()) {
-                // There is no free path to the target
-                blocked = true;
-                return null;
-            }
-            targetPosition = currentPathPositionsIter.next();
+            blocked = true;
+            return null;
         }
         
         final PositionedShape shape = new RectangularShape(targetPosition.getxCoordinate(),
                                                            targetPosition.getyCoordinate(),
-                   										   2,
-                   										   2);
+                                                              2,
+                                                              2);
         
-        // If there is another robot, memorize the target position for the next run
         if (getFactory().hasMobileComponentAt(shape, this)) {
             this.memorizedTargetPosition = targetPosition;
-            
             return null;
         }
 
-        // Reset the memorized position
         this.memorizedTargetPosition = null;
             
         return new Motion(getPosition(), targetPosition);
     }
     
-    /*
     private Position getTargetPosition() {
-        // If a target position was memorized, it means that the robot was blocked during the last iteration 
-        // so it waited for another robot to pass. So try to move to this memorized position otherwise move to  
-        // the next position from the path
-        return this.memorizedTargetPosition == null ? currentPathPositionsIter.next() : nextPositionLivelock;
+        if (this.nextPosition != null) {
+            Position temp = this.nextPosition;
+            this.nextPosition = null;
+            return temp;
+        }
+
+        if (this.memorizedTargetPosition != null) {
+            return this.memorizedTargetPosition;
+        }
+
+        if (currentPathPositionsIter != null && currentPathPositionsIter.hasNext()) {
+            return currentPathPositionsIter.next();
+        }
+
+        return null;
     }
-    */
     
     public boolean isLivelyLocked() {
         if (memorizedTargetPosition == null) {
