@@ -119,11 +119,11 @@ public class Robot extends Component {
 		}
 		
 		return targetComponentsIterator.hasNext() ? targetComponentsIterator.next() : null;
-	}
-	
-	private int moveToNextPathPosition() {
+    }
+    
+    private int moveToNextPathPosition() {
         final Motion motion = computeMotion();
-        int displacement = motion == null ? 0 : motion.moveToTarget();
+        int displacement = motion == null ? 0 : getFactory().moveComponent(motion, this);
 
         if (displacement != 0) {
             notifyObservers();

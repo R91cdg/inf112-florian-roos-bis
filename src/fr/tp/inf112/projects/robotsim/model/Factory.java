@@ -9,6 +9,7 @@ import fr.tp.inf112.projects.canvas.controller.Observer;
 import fr.tp.inf112.projects.canvas.model.Canvas;
 import fr.tp.inf112.projects.canvas.model.Figure;
 import fr.tp.inf112.projects.canvas.model.Style;
+import fr.tp.inf112.projects.robotsim.model.motion.Motion;
 import fr.tp.inf112.projects.robotsim.model.shapes.PositionedShape;
 import fr.tp.inf112.projects.robotsim.model.shapes.RectangularShape;
 
@@ -136,6 +137,19 @@ public class Factory extends Component implements Canvas, Observable {
 		return true;
 	}
 	
+	public synchronized int moveComponent(final Motion motion, final Component componentToMove) {
+		Position targetPosition = motion.getTargetPosition();
+		
+		PositionedShape targetShape = new RectangularShape(targetPosition.getxCoordinate(), 
+															 targetPosition.getyCoordinate(), 
+															 2, 2);
+
+		if (hasMobileComponentAt(targetShape, componentToMove)) {
+			return 0;
+		}
+		
+		return motion.moveToTarget();
+	}
 	@Override
 	public Style getStyle() {
 		return DEFAULT;
