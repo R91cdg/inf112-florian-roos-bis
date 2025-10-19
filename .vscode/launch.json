@@ -1,0 +1,87 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "SimulatorApplication",
+            "request": "launch",
+            "mainClass": "fr.tp.inf112.projects.robotsim.app.SimulatorApplication",
+            "projectName": "fr.tp.inf112.projects.robotsim",
+            "vmArgs": "-Djava.util.logging.config.file=config/logging.properties",
+        },
+        {
+            "type": "java",
+            "name": "CompleteGraphDemo",
+            "request": "launch",
+            "mainClass": "org.jgrapht.demo/org.jgrapht.demo.CompleteGraphDemo",
+            "projectName": "jgrapht-demo"
+        },
+        {
+            "type": "java",
+            "name": "DependencyDemo",
+            "request": "launch",
+            "mainClass": "org.jgrapht.demo/org.jgrapht.demo.DependencyDemo",
+            "projectName": "jgrapht-demo"
+        },
+        {
+            "type": "java",
+            "name": "DirectedGraphDemo",
+            "request": "launch",
+            "mainClass": "org.jgrapht.demo/org.jgrapht.demo.DirectedGraphDemo",
+            "projectName": "jgrapht-demo"
+        },
+        {
+            "type": "java",
+            "name": "GraphBuilderDemo",
+            "request": "launch",
+            "mainClass": "org.jgrapht.demo/org.jgrapht.demo.GraphBuilderDemo",
+            "projectName": "jgrapht-demo"
+        },
+        {
+            "type": "java",
+            "name": "GraphMLDemo",
+            "request": "launch",
+            "mainClass": "org.jgrapht.demo/org.jgrapht.demo.GraphMLDemo",
+            "projectName": "jgrapht-demo"
+        },
+        {
+            "type": "java",
+            "name": "HelloJGraphT",
+            "request": "launch",
+            "mainClass": "org.jgrapht.demo/org.jgrapht.demo.HelloJGraphT",
+            "projectName": "jgrapht-demo"
+        },
+        {
+            "type": "java",
+            "name": "JGraphXAdapterDemo",
+            "request": "launch",
+            "mainClass": "org.jgrapht.demo/org.jgrapht.demo.JGraphXAdapterDemo",
+            "projectName": "jgrapht-demo"
+        },
+        {
+            "type": "java",
+            "name": "LabeledEdges",
+            "request": "launch",
+            "mainClass": "org.jgrapht.demo/org.jgrapht.demo.LabeledEdges",
+            "projectName": "jgrapht-demo"
+        },
+        {
+            "type": "java",
+            "name": "PerformanceDemo",
+            "request": "launch",
+            "mainClass": "org.jgrapht.demo/org.jgrapht.demo.PerformanceDemo",
+            "projectName": "jgrapht-demo"
+        }
+    ]
+}
