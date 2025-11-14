@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import fr.tp.inf112.projects.robotsim.model.Factory;
 import fr.tp.inf112.projects.robotsim.model.Position;
@@ -17,6 +18,8 @@ public abstract class AbstractFactoryPathFinder<Graph, Vertex> implements Factor
 	 */
 	private static final long serialVersionUID = 3864762720560889146L;
 
+	private static final Logger LOGGER = Logger.getLogger(AbstractFactoryPathFinder.class.getName());
+	
 	private final Factory factoryModel;
 	
 	private final int resolution;
@@ -67,7 +70,7 @@ public abstract class AbstractFactoryPathFinder<Graph, Vertex> implements Factor
 				}
 			}
 			
-			System.out.println(graph.toString());
+			LOGGER.fine(graph.toString());
 		}
 	}
 	
