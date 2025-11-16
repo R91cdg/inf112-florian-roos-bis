@@ -4,8 +4,13 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-
-
+        {
+            "type": "java",
+            "name": "server",
+            "request": "launch",
+            "mainClass": "fr.tp.inf112.projects.robotsim.app.server",
+            "projectName": "fr.tp.inf112.projects.robotsim"
+        },
         {
             "type": "java",
             "name": "Current File",
@@ -18,7 +23,7 @@
             "request": "launch",
             "mainClass": "fr.tp.inf112.projects.robotsim.app.SimulatorApplication",
             "projectName": "fr.tp.inf112.projects.robotsim",
-            "vmArgs": "-Djava.util.logging.config.file=config/logging.properties",
+            "vmArgs": "-Djava.util.logging.config.file=config/logging.properties"
         },
         {
             "type": "java",

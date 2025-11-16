@@ -8,14 +8,12 @@ import javax.swing.SwingUtilities;
 
 import fr.tp.inf112.projects.canvas.model.impl.BasicVertex;
 import fr.tp.inf112.projects.canvas.view.CanvasViewer;
-import fr.tp.inf112.projects.canvas.view.FileCanvasChooser;
 import fr.tp.inf112.projects.robotsim.model.Area;
 import fr.tp.inf112.projects.robotsim.model.Battery;
 import fr.tp.inf112.projects.robotsim.model.ChargingStation;
 import fr.tp.inf112.projects.robotsim.model.Conveyor;
 import fr.tp.inf112.projects.robotsim.model.Door;
 import fr.tp.inf112.projects.robotsim.model.Factory;
-import fr.tp.inf112.projects.robotsim.model.FactoryPersistenceManager;
 import fr.tp.inf112.projects.robotsim.model.Machine;
 import fr.tp.inf112.projects.robotsim.model.Robot;
 import fr.tp.inf112.projects.robotsim.model.Room;
@@ -83,8 +81,8 @@ public class SimulatorApplication {
 			  
 			@Override
 	        public void run() {
-				final FileCanvasChooser canvasChooser = new FileCanvasChooser("factory", "Puck Factory");
-				final Component factoryViewer = new CanvasViewer(new SimulatorController(factory, new FactoryPersistenceManager(canvasChooser)));
+				final RemoteFileCanvasChooser canvasChooser = new RemoteFileCanvasChooser("factory", "Puck Factory");
+				final Component factoryViewer = new CanvasViewer(new SimulatorController(factory, new RemoteFactoryPersistenceManager(canvasChooser)));
 				canvasChooser.setViewer(factoryViewer);
 				//new CanvasViewer(factory);
 			}
