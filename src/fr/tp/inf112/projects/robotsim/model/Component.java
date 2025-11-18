@@ -116,9 +116,14 @@ public abstract class Component implements Figure, Serializable, Runnable {
 		return getPositionedShape().getHeight();
 	}
 	
-	public boolean behave() {
-		return false;
+	public boolean isSimulationStarted() {
+		if (getFactory() == null) {
+			return false;
+		}
+		return getFactory().isSimulationStarted();
 	}
+	
+	public abstract boolean behave();
 	
 	public boolean isMobile() {
 		return false;
@@ -144,9 +149,5 @@ public abstract class Component implements Figure, Serializable, Runnable {
 	@Override
 	public Shape getShape() {
 		return getPositionedShape();
-	}
-	
-	public boolean isSimulationStarted() {
-		return getFactory().isSimulationStarted();
 	}
 }
