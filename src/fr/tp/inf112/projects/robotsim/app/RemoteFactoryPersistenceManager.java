@@ -3,6 +3,7 @@ package fr.tp.inf112.projects.robotsim.app;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.io.IOException;
 
 import fr.tp.inf112.projects.canvas.model.Canvas;
 import fr.tp.inf112.projects.canvas.model.CanvasChooser;
@@ -19,7 +20,7 @@ public class RemoteFactoryPersistenceManager extends AbstractCanvasPersistenceMa
     }
 
     @Override
-    public void persist(Canvas canvasModel) {
+    public void persist(Canvas canvasModel) throws IOException {
         if (canvasModel instanceof Factory) {
             try (
                 Socket socket = new Socket(serverAddress, serverPort);
@@ -27,8 +28,11 @@ public class RemoteFactoryPersistenceManager extends AbstractCanvasPersistenceMa
             ) {
                 out.writeObject(canvasModel);
                 out.flush();
+            } catch (IOException e) {
+                throw e; // Re-throw IOException
             } catch (Exception e) {
-                e.printStackTrace();
+                // Wrap other exceptions in a RuntimeException or handle appropriately
+                throw new RuntimeException(e);
             }
         }
     }
@@ -42,7 +46,11 @@ public class RemoteFactoryPersistenceManager extends AbstractCanvasPersistenceMa
         ) {
             out.writeObject(canvasId);
             out.flush();
-            return (Canvas) in.readObject();
+            Canvas canvas = (Canvas) in.readObject();
+            if (canvas != null) {
+                canvas.setId(canvasId);
+            }
+            return canvas;
         } catch (Exception e) {
             e.printStackTrace();
             return null;
