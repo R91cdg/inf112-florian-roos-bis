@@ -6,9 +6,9 @@ public class Position implements Serializable {
 
 	private static final long serialVersionUID = 7274819087013715987L;
 
-	private int xCoordinate;
+	public int xCoordinate;
 
-	private int yCoordinate;
+	public int yCoordinate;
 
 	public Position(final int xCoordinate, 
 					final int yCoordinate) {

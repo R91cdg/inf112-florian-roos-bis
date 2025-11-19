@@ -9,7 +9,7 @@ public abstract class PositionedShape implements Shape, Serializable {
 
 	private static final long serialVersionUID = 2217860927757709195L;
 
-	private static float intersectionLength(final int coordinate1,
+	public static float intersectionLength(final int coordinate1,
 											final int width1,
 											final int coordinate2,
 											final int width2) {
@@ -28,9 +28,9 @@ public abstract class PositionedShape implements Shape, Serializable {
 		return 0;
 	}
 
-	private final Position position;
+	public final Position position;
 	
-	protected PositionedShape(final int xCoordinate,
+	public PositionedShape(final int xCoordinate,
 							  final int yCoordinate) {
 		this.position = new Position(xCoordinate, yCoordinate);
 	}
@@ -47,11 +47,11 @@ public abstract class PositionedShape implements Shape, Serializable {
 		return xIntersectionLength(shape) * yIntersectionLength(shape);
 	}
 	
-	protected float xIntersectionLength(final PositionedShape shape) {
+	public float xIntersectionLength(final PositionedShape shape) {
 		return intersectionLength(getxCoordinate(), getWidth(), shape.getxCoordinate(), shape.getWidth());
 	}
 
-	protected float yIntersectionLength(final PositionedShape shape) {
+	public float yIntersectionLength(final PositionedShape shape) {
 		return intersectionLength(getyCoordinate(), getHeight(), shape.getyCoordinate(), shape.getHeight());
 	}
 	

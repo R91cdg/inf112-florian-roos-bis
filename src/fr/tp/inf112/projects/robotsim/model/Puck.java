@@ -16,4 +16,9 @@ public class Puck extends Component {
 	public String toString() {
 		return super.toString() + "]";
 	}
+
+	@Override
+	public void behave() {
+		
+	}
 }

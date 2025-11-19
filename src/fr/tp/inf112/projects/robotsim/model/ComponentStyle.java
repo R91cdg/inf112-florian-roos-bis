@@ -1,6 +1,7 @@
 package fr.tp.inf112.projects.robotsim.model;
 
 import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import fr.tp.inf112.projects.canvas.model.Color;
 import fr.tp.inf112.projects.canvas.model.Style;
@@ -65,6 +66,7 @@ public class ComponentStyle implements Style, Stroke, Serializable {
 
 
 	@Override
+	@JsonIgnore
 	public Stroke getStroke() {
 		return this;
 	}

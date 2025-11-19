@@ -2,6 +2,8 @@ package fr.tp.inf112.projects.robotsim.model;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import fr.tp.inf112.projects.canvas.model.Figure;
 import fr.tp.inf112.projects.canvas.model.Style;
 import fr.tp.inf112.projects.robotsim.model.shapes.PositionedShape;
@@ -19,7 +21,11 @@ public abstract class Component implements Figure, Serializable, Runnable {
 	
 	private final String name;
 
-	protected Component(final Factory factory,
+	public Component() {
+		this(null, null, null);
+	}
+
+	public Component(final Factory factory,
 						final PositionedShape shape,
 						final String name) {
 		this.factory = factory;
@@ -57,16 +63,19 @@ public abstract class Component implements Figure, Serializable, Runnable {
 	}
 	
 	public Position getPosition() {
-		return getPositionedShape().getPosition();
+		final PositionedShape shape = getPositionedShape();
+		return shape == null ? null : shape.getPosition();
 	}
 
+	@JsonIgnore
 	protected Factory getFactory() {
 		return factory;
 	}
 
 	@Override
 	public int getxCoordinate() {
-		return getPositionedShape().getxCoordinate();
+		final PositionedShape shape = getPositionedShape();
+		return shape == null ? -1 : shape.getxCoordinate();
 	}
 
 	protected boolean setxCoordinate(int xCoordinate) {
@@ -81,7 +90,8 @@ public abstract class Component implements Figure, Serializable, Runnable {
 
 	@Override
 	public int getyCoordinate() {
-		return getPositionedShape().getyCoordinate();
+		final PositionedShape shape = getPositionedShape();
+		return shape == null ? -1 : shape.getyCoordinate();
 	}
 
 	protected boolean setyCoordinate(final int yCoordinate) {
@@ -109,15 +119,17 @@ public abstract class Component implements Figure, Serializable, Runnable {
 	}
 
 	public int getWidth() {
-		return getPositionedShape().getWidth();
+		final PositionedShape shape = getPositionedShape();
+		return shape == null ? 0 : shape.getWidth();
 	}
 
 	public int getHeight() {
-		return getPositionedShape().getHeight();
+		final PositionedShape shape = getPositionedShape();
+		return shape == null ? 0 : shape.getHeight();
 	}
 	
 	public boolean behave() {
-		return false;
+	    return false;
 	}
 	
 	public boolean isMobile() {
@@ -147,6 +159,7 @@ public abstract class Component implements Figure, Serializable, Runnable {
 	}
 	
 	public boolean isSimulationStarted() {
-		return getFactory().isSimulationStarted();
+		final Factory factory = getFactory();
+		return factory != null && factory.isSimulationStarted();
 	}
 }
