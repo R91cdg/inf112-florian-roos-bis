@@ -2,6 +2,7 @@ package fr.tp.inf112.projects.robotsim.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -22,6 +23,7 @@ public class Factory extends Component implements Canvas, Observable {
 	private static final ComponentStyle DEFAULT = new ComponentStyle(5.0f);
 
 
+	@JsonManagedReference
     private final List<Component> components;
 
 	@JsonIgnore
@@ -163,8 +165,6 @@ public class Factory extends Component implements Canvas, Observable {
 		
 		return motion.moveToTarget();
 	}
-	@Override
-	@JsonIgnore
 	public Style getStyle() {
 		return DEFAULT;
 	}

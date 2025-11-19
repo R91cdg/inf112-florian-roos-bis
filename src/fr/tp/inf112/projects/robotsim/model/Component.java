@@ -2,6 +2,7 @@ package fr.tp.inf112.projects.robotsim.model;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import fr.tp.inf112.projects.canvas.model.Figure;
@@ -15,6 +16,7 @@ public abstract class Component implements Figure, Serializable, Runnable {
 
 	private String id;
 
+	@JsonBackReference
 	private final Factory factory;
 	
 	private final PositionedShape positionedShape;
@@ -67,11 +69,11 @@ public abstract class Component implements Figure, Serializable, Runnable {
 		return shape == null ? null : shape.getPosition();
 	}
 
-	@JsonIgnore
-	protected Factory getFactory() {
+	public Factory getFactory() {
 		return factory;
 	}
 
+	@JsonIgnore
 	@Override
 	public int getxCoordinate() {
 		final PositionedShape shape = getPositionedShape();
@@ -88,6 +90,7 @@ public abstract class Component implements Figure, Serializable, Runnable {
 		return false;
 	}
 
+	@JsonIgnore
 	@Override
 	public int getyCoordinate() {
 		final PositionedShape shape = getPositionedShape();
@@ -148,11 +151,13 @@ public abstract class Component implements Figure, Serializable, Runnable {
 		return false;
 	}
 	
+	@JsonIgnore
 	@Override
 	public Style getStyle() {
 		return ComponentStyle.DEFAULT;
 	}
 	
+	@JsonIgnore
 	@Override
 	public Shape getShape() {
 		return getPositionedShape();

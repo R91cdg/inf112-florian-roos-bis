@@ -2,6 +2,7 @@ package fr.tp.inf112.projects.robotsim.model.shapes;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import fr.tp.inf112.projects.canvas.model.Shape;
 import fr.tp.inf112.projects.robotsim.model.Position;
 
@@ -28,7 +29,11 @@ public abstract class PositionedShape implements Shape, Serializable {
 		return 0;
 	}
 
-	public final Position position;
+	public Position position;
+	
+	public PositionedShape() {
+		this(0, 0);
+	}
 	
 	public PositionedShape(final int xCoordinate,
 							  final int yCoordinate) {
@@ -59,20 +64,22 @@ public abstract class PositionedShape implements Shape, Serializable {
 		return position;
 	}
 
+	@JsonIgnore
 	public int getxCoordinate() {
-		return getPosition().getxCoordinate();
+		return getPosition() == null ? -1 : getPosition().getxCoordinate();
 	}
 
 	public boolean setxCoordinate(final int xCoordinate) {
-		return getPosition().setxCoordinate(xCoordinate);
+		return getPosition() != null && getPosition().setxCoordinate(xCoordinate);
 	}
 	
+	@JsonIgnore
 	public int getyCoordinate() {
-		return getPosition().getyCoordinate();
+		return getPosition() == null ? -1 : getPosition().getyCoordinate();
 	}
 
 	public boolean setyCoordinate(final int yCoordinate) {
-		return getPosition().setyCoordinate(yCoordinate);
+		return getPosition() != null && getPosition().setyCoordinate(yCoordinate);
 	}
 
 	@Override
