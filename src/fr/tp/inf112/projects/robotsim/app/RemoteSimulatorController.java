@@ -1,6 +1,7 @@
 package fr.tp.inf112.projects.robotsim.app;
 
 import java.io.IOException;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
@@ -10,6 +11,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
@@ -18,9 +21,12 @@ import fr.tp.inf112.projects.canvas.controller.CanvasViewerController;
 import fr.tp.inf112.projects.canvas.controller.Observer;
 import fr.tp.inf112.projects.canvas.model.Canvas;
 import fr.tp.inf112.projects.canvas.model.CanvasPersistenceManager;
+import fr.tp.inf112.projects.canvas.model.impl.BasicVertex;
 import fr.tp.inf112.projects.robotsim.model.Component;
 import fr.tp.inf112.projects.robotsim.model.Factory;
 import fr.tp.inf112.projects.robotsim.model.shapes.PositionedShape;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
 
 public class RemoteSimulatorController implements CanvasViewerController {
 
@@ -28,7 +34,8 @@ public class RemoteSimulatorController implements CanvasViewerController {
     private final CanvasPersistenceManager persistenceManager;
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
-
+    private volatile boolean running = false;
+    
     public RemoteSimulatorController(CanvasPersistenceManager persistenceManager) {
         this(null, persistenceManager);
     }
@@ -38,8 +45,10 @@ public class RemoteSimulatorController implements CanvasViewerController {
         this.persistenceManager = persistenceManager;
         this.httpClient = HttpClient.newHttpClient();
         this.objectMapper = new ObjectMapper();
+        
+        this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        this.objectMapper.addMixIn(BasicVertex.class, BasicVertexMixin.class);
 
-        // Configuration du polymorphisme pour Jackson
         PolymorphicTypeValidator typeValidator = BasicPolymorphicTypeValidator.builder()
                 .allowIfSubType(PositionedShape.class.getPackageName())
                 .allowIfSubType(Component.class.getPackageName())
@@ -112,20 +121,17 @@ public class RemoteSimulatorController implements CanvasViewerController {
     public void startAnimation() {
         if (factoryModel == null) return;
 
-        // FIX : Bloc Try-Catch OBLIGATOIRE pour compiler
         try {
-            // 1. Sauvegarde automatique si pas d'ID
             if (factoryModel.getId() == null) {
                 factoryModel.setId("autosave.factory");
                 persistenceManager.persist(factoryModel);
             }
 
-            // 2. Appel REST pour démarrer
             final URI uri = new URI("http", null, "localhost", 8081, "/simulation/start/" + factoryModel.getId(), null, null);
             HttpRequest request = HttpRequest.newBuilder().uri(uri).POST(HttpRequest.BodyPublishers.noBody()).build();
             httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             
-            // 3. Lancement du thread de mise à jour
+            this.running = true;
             new Thread(this::updateViewer).start();
 
         } catch (Exception e) {
@@ -136,6 +142,7 @@ public class RemoteSimulatorController implements CanvasViewerController {
 
     @Override
     public void stopAnimation() {
+    	this.running = false;
         if (factoryModel == null || factoryModel.getId() == null) return;
         try {
             final URI uri = new URI("http", null, "localhost", 8081, "/simulation/stop/" + factoryModel.getId(), null, null);
@@ -160,8 +167,7 @@ public class RemoteSimulatorController implements CanvasViewerController {
     }
 
     private void updateViewer() {
-        // Boucle tant que la simulation tourne
-        while (isAnimationRunning()) {
+        while (this.running) {
             try {
                 final URI uri = new URI("http", null, "localhost", 8081, "/simulation/" + factoryModel.getId(), null, null);
                 HttpRequest request = HttpRequest.newBuilder().uri(uri).GET().build();
@@ -169,15 +175,19 @@ public class RemoteSimulatorController implements CanvasViewerController {
                 
                 if (response.statusCode() == 200 && response.body() != null && !response.body().isEmpty()) {
                     Factory remoteFactory = objectMapper.readValue(response.body(), Factory.class);
-                    // Mise à jour du modèle local
                     setCanvas(remoteFactory);
                 }
-                // Pause pour ne pas saturer le réseau
                 Thread.sleep(100);
             } catch (Exception e) {
                 e.printStackTrace();
                 break; // On arrête la boucle en cas d'erreur grave
             }
+        }
+    }
+    
+    abstract static class BasicVertexMixin {
+        @JsonCreator
+        public BasicVertexMixin(@JsonProperty("xCoordinate") int x, @JsonProperty("yCoordinate") int y) {
         }
     }
 }

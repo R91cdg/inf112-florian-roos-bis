@@ -3,6 +3,8 @@ package fr.tp.inf112.projects.robotsim.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import fr.tp.inf112.projects.robotsim.model.shapes.PositionedShape;
 import fr.tp.inf112.projects.robotsim.model.shapes.RectangularShape;
 
@@ -38,6 +40,16 @@ public class Room extends Component {
 		
 		areas = new ArrayList<>();
 		doors = new ArrayList<>();
+	}
+	
+	public Room() {
+		super(null, null, null);
+		this.leftWall = null;
+		this.rightWall = null;
+		this.topWall = null;
+		this.bottomWall = null;
+		this.areas = null;
+		this.doors = null;
 	}
 	
 	protected boolean addArea(final Area area) {

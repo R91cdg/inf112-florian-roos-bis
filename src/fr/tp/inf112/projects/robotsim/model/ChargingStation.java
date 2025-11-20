@@ -22,6 +22,10 @@ public class ChargingStation extends Component {
 		
 		charging = false;
 	}
+	
+	public ChargingStation() {
+		super(null, null, null);
+	}
 
 	@Override
 	public String toString() {
@@ -42,7 +46,9 @@ public class ChargingStation extends Component {
 	}
 
 	@Override
-	public void behave() {
+	public boolean behave() {
+		
+		return true;
 		
 	}
 }

@@ -12,13 +12,17 @@ public class Puck extends Component {
 		super(factory, shape, name);
 	}
 
+	public Puck() {
+		super(null, null, null);
+	}
+
 	@Override
 	public String toString() {
 		return super.toString() + "]";
 	}
 
 	@Override
-	public void behave() {
-		
+	public boolean behave() {
+		return true;
 	}
 }

@@ -1,5 +1,6 @@
 package fr.tp.inf112.projects.robotsim.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import fr.tp.inf112.projects.canvas.model.Style;
 import fr.tp.inf112.projects.robotsim.model.shapes.PositionedShape;
 import fr.tp.inf112.projects.robotsim.model.shapes.RectangularShape;
@@ -22,6 +23,10 @@ public class Area extends Component {
 		machine = null;
 	}
 	
+	public Area() {
+		super(null, null, null);
+	}
+
 	protected void setMachine( final Machine machine ) {
 		this.machine = machine;
 	}

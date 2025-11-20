@@ -18,6 +18,10 @@ public class Position implements Serializable {
 		this.yCoordinate = yCoordinate;
 	}
 
+	public Position() {
+		this(0,0);
+	}
+
 	public int getxCoordinate() {
 		return xCoordinate;
 	}

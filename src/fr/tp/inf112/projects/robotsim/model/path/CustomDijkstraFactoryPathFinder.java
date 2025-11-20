@@ -27,6 +27,10 @@ public class CustomDijkstraFactoryPathFinder extends AbstractFactoryPathFinder<G
 									 	   final int resolution) {
 		super(factoryModel, resolution);
 	}
+	
+	public CustomDijkstraFactoryPathFinder() {
+		super(null, 0);
+	}
 
 	@Override
 	public List<Position> findPath(final Component sourceComponent,

@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIdentityReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import fr.tp.inf112.projects.canvas.model.Style;
 import fr.tp.inf112.projects.canvas.model.impl.RGBColor;
 import fr.tp.inf112.projects.robotsim.model.motion.Motion;
@@ -24,6 +27,7 @@ public class Robot extends Component {
 	
 	private int speed;
 	
+	@JsonIdentityReference(alwaysAsId = true)
 	private List<Component> targetComponents;
 	
 	private transient Iterator<Component> targetComponentsIterator;
@@ -59,6 +63,10 @@ public class Robot extends Component {
 		memorizedTargetPosition = null;
 		nextPosition = null; // Initialiser la nouvelle variable
 	}
+    
+    public Robot() {
+		this(null, null, null, null, null);
+	}
 
 	@Override
 	public String toString() {
@@ -73,11 +81,12 @@ public class Robot extends Component {
 		this.speed = speed;
 	}
 	
+	@JsonIgnore
 	public Position getMemorizedTargetPosition() {
 		return memorizedTargetPosition;
 	}
 	
-	private List<Component> getTargetComponents() {
+	public List<Component> getTargetComponents() {
 		if (targetComponents == null) {
 			targetComponents = new ArrayList<>();
 		}
@@ -100,6 +109,13 @@ public class Robot extends Component {
 
 	@Override
 	public boolean behave() {
+		if (pathFinder instanceof fr.tp.inf112.projects.robotsim.model.path.AbstractFactoryPathFinder) {
+			var abstractFinder = (fr.tp.inf112.projects.robotsim.model.path.AbstractFactoryPathFinder) pathFinder;
+			if (abstractFinder.getFactoryModel() == null) {
+				abstractFinder.setFactoryModel(getFactory());
+			}
+			abstractFinder.buildGraph();
+		}
 		if (getTargetComponents().isEmpty()) {
 			return false;
 		}
@@ -190,7 +206,7 @@ public class Robot extends Component {
         return new Motion(getPosition(), targetPosition);
     }
     
-    private Position getTargetPosition() {
+    public Position getTargetPosition() {
         if (this.nextPosition != null) {
             Position temp = this.nextPosition;
             this.nextPosition = null;
@@ -208,6 +224,7 @@ public class Robot extends Component {
         return null;
     }
     
+    @JsonIgnore
     public boolean isLivelyLocked() {
         if (memorizedTargetPosition == null) {
             return false;
@@ -235,5 +252,9 @@ public class Robot extends Component {
 	@Override
 	public Style getStyle() {
 		return blocked ? BLOCKED_STYLE : STYLE;
+	}
+
+	public FactoryPathFinder getPathFinder() {
+		return pathFinder;
 	}
 }

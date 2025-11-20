@@ -29,6 +29,10 @@ public class JGraphTDijkstraFactoryPathFinder extends AbstractFactoryPathFinder<
 											final int resolution) {
 		super(factoryModel, resolution);
 	}
+	
+	public JGraphTDijkstraFactoryPathFinder() {
+		super(null, 0);
+	}
 
 	@Override
 	public List<Position> findPath(final Component sourceComponent,

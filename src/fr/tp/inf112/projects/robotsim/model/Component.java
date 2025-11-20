@@ -2,14 +2,21 @@ package fr.tp.inf112.projects.robotsim.model;
 
 import java.io.Serializable;
 
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import fr.tp.inf112.projects.canvas.model.Figure;
 import fr.tp.inf112.projects.canvas.model.Style;
 import fr.tp.inf112.projects.robotsim.model.shapes.PositionedShape;
 import fr.tp.inf112.projects.canvas.model.Shape;
 
+@JsonIdentityInfo(
+    generator = ObjectIdGenerators.IntSequenceGenerator.class, 
+    property = "@id"
+)
 public abstract class Component implements Figure, Serializable, Runnable {
 	
 	private static final long serialVersionUID = -5960950869184030220L;
@@ -64,6 +71,7 @@ public abstract class Component implements Figure, Serializable, Runnable {
 		return positionedShape;
 	}
 	
+	@JsonIgnore
 	public Position getPosition() {
 		final PositionedShape shape = getPositionedShape();
 		return shape == null ? null : shape.getPosition();
@@ -120,12 +128,14 @@ public abstract class Component implements Figure, Serializable, Runnable {
 		return getClass().getSimpleName() + " [name=" + name + " xCoordinate=" + getxCoordinate() + ", yCoordinate=" + getyCoordinate()
 				+ ", shape=" + getPositionedShape();
 	}
-
+	
+	@JsonIgnore
 	public int getWidth() {
 		final PositionedShape shape = getPositionedShape();
 		return shape == null ? 0 : shape.getWidth();
 	}
-
+	
+	@JsonIgnore
 	public int getHeight() {
 		final PositionedShape shape = getPositionedShape();
 		return shape == null ? 0 : shape.getHeight();
@@ -135,6 +145,7 @@ public abstract class Component implements Figure, Serializable, Runnable {
 	    return false;
 	}
 	
+	@JsonIgnore
 	public boolean isMobile() {
 		return false;
 	}
@@ -163,6 +174,7 @@ public abstract class Component implements Figure, Serializable, Runnable {
 		return getPositionedShape();
 	}
 	
+	@JsonIgnore
 	public boolean isSimulationStarted() {
 		final Factory factory = getFactory();
 		return factory != null && factory.isSimulationStarted();

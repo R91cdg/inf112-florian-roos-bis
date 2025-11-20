@@ -14,6 +14,10 @@ public class Machine extends Component {
 		
 		area.setMachine(this);
 	}
+	
+	public Machine() {
+		super(null, null, null);
+	}
 
 	@Override
 	public String toString() {

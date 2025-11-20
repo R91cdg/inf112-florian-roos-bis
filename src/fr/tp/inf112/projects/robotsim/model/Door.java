@@ -90,6 +90,11 @@ public class Door extends Component {
 		this.open = open;
 	}
 	
+	public Door() {
+		super(null, null, null);
+		this.room = null;
+	}
+	
 	@Override
 	public Style getStyle() {
 		return isOpen() ? OPEN_STYLE : ComponentStyle.DEFAULT_BLACK;

@@ -1,0 +1,57 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>fr.tp.inf112.projects</groupId>
+    <artifactId>robotsim</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <build>
+        <!-- Indispensable pour un projet Eclipse classique -->
+        <sourceDirectory>src</sourceDirectory>
+    </build>
+
+    <dependencies>
+        <!-- 1. Jackson (Version 2.17.0 pour matcher Spring Boot) -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.17.0</version>
+        </dependency>
+        
+        <!-- 2. JGraphT (Pour les calculs de chemin) -->
+        <dependency>
+            <groupId>org.jgrapht</groupId>
+            <artifactId>jgrapht-core</artifactId>
+            <version>1.5.1</version>
+        </dependency>
+
+        <!-- 3. Bibliothèques Locales (Dans le dossier libs) -->
+        <!-- Adapte le nom des fichiers .jar si nécessaire -->
+        
+        <dependency>
+            <groupId>local.canvas</groupId>
+            <artifactId>canvas-viewer</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/libs/canvas-viewer.jar</systemPath>
+        </dependency>
+
+        <dependency>
+            <groupId>local.graph</groupId>
+            <artifactId>graph</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/libs/graph.jar</systemPath>
+        </dependency>
+        
+    </dependencies>
+</project>

@@ -1,6 +1,7 @@
 package fr.tp.inf112.projects.robotsim.model.path;
 
 import java.io.Serializable;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -11,6 +12,8 @@ import fr.tp.inf112.projects.robotsim.model.Position;
 import fr.tp.inf112.projects.robotsim.model.shapes.PositionedShape;
 import fr.tp.inf112.projects.robotsim.model.shapes.RectangularShape;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public abstract class AbstractFactoryPathFinder<Graph, Vertex> implements FactoryPathFinder, Serializable {
 
 	/**
@@ -20,7 +23,7 @@ public abstract class AbstractFactoryPathFinder<Graph, Vertex> implements Factor
 
 	private static final Logger LOGGER = Logger.getLogger(AbstractFactoryPathFinder.class.getName());
 	
-	private final Factory factoryModel;
+	private Factory factoryModel;
 	
 	private final int resolution;
 	
@@ -32,9 +35,18 @@ public abstract class AbstractFactoryPathFinder<Graph, Vertex> implements Factor
 		this.resolution = resolution;
 		graph = null;
 	}
+	
+	public AbstractFactoryPathFinder() {
+		this(null, 0);
+	}
 
+	@JsonIgnore
 	public Factory getFactoryModel() {
 		return factoryModel;
+	}
+
+	public void setFactoryModel(Factory factoryModel) {
+		this.factoryModel = factoryModel;
 	}
 
 	public int getResolution() {
@@ -45,7 +57,7 @@ public abstract class AbstractFactoryPathFinder<Graph, Vertex> implements Factor
 		return graph;
 	}
 	
-	protected void buildGraph() {
+	public void buildGraph() {
 		if (getGraph() == null) {
 			graph = newGraph();
 			final int xSize = getFactoryModel().getWidth() / getResolution();
