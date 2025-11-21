@@ -42,6 +42,22 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- CORRECTION : Ajout manuel des dépendances locales pour que la compilation fonctionne -->
+		<dependency>
+			<groupId>local.canvas</groupId>
+			<artifactId>canvas-viewer</artifactId>
+			<version>1.0</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/../fr.tp.inf112.projects.robotsim/libs/canvas-viewer.jar</systemPath>
+		</dependency>
+		<dependency>
+			<groupId>local.graph</groupId>
+			<artifactId>graph</artifactId>
+			<version>1.0</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/../fr.tp.inf112.projects.robotsim/libs/graph.jar</systemPath>
+		</dependency>
 	</dependencies>
 
 	<build>
