@@ -39,7 +39,10 @@ public class Robot extends Component {
     
     private transient Iterator<Position> currentPathPositionsIter;
     
-    private transient boolean blocked;
+    private boolean blocked;
+    
+    // Indique si le robot est bloqué car aucun chemin n'a été trouvé vers la cible
+    private boolean pathNotFound;
     
     private Position memorizedTargetPosition;
 
@@ -66,6 +69,7 @@ public class Robot extends Component {
         currentPathPositionsIter = null;
         speed = 5;
         blocked = false;
+        pathNotFound = false;
         memorizedTargetPosition = null;
         nextPosition = null; 
         pathFinderInitialized = true; 
@@ -140,6 +144,13 @@ public class Robot extends Component {
             return false;
         }
         
+        // Si le robot est bloqué car aucun chemin n'a été trouvé, il reste immobile
+        if (pathNotFound) {
+            blocked = true; // Assurer que le robot est affiché en rouge
+            LOGGER.info("Robot " + getName() + ": Permanently blocked - no path to " + currTargetComponent.getName());
+            return false;
+        }
+        
         if (currTargetComponent == null || hasReachedCurrentTarget()) {
             if (currTargetComponent != null) {
                 LOGGER.info("Robot " + getName() + " REACHED target: " + currTargetComponent.getName() + " at position " + getPosition());
@@ -149,6 +160,12 @@ public class Robot extends Component {
             if (currTargetComponent != null) {
                 LOGGER.info("Robot " + getName() + " NEW TARGET: " + currTargetComponent.getName() + " at position " + currTargetComponent.getPosition());
                 computePathToCurrentTargetComponent();
+                
+                // Si aucun chemin n'a été trouvé, le robot devient définitivement bloqué
+                if (pathNotFound) {
+                    LOGGER.warning("Robot " + getName() + ": Cannot reach " + currTargetComponent.getName() + " - robot will stay blocked");
+                    return false;
+                }
             }
         }
 
@@ -183,6 +200,22 @@ public class Robot extends Component {
         }
         else if (isLivelyLocked()) {
             LOGGER.info("Robot " + getName() + ": LIVELOCK DETECTED at position " + getPosition());
+            
+            // Vérifier si l'autre robot est définitivement bloqué (pathNotFound)
+            final Component otherComponent = getFactory().getMobileComponentAt(memorizedTargetPosition, this);
+            if (otherComponent instanceof Robot && ((Robot) otherComponent).isPathNotFound()) {
+                // L'autre robot ne bougera jamais - passer à la cible suivante
+                LOGGER.info("Robot " + getName() + ": Other robot is permanently blocked, skipping to next target");
+                currTargetComponent = nextTargetComponentToVisit();
+                if (currTargetComponent != null) {
+                    LOGGER.info("Robot " + getName() + " NEW TARGET (skipped blocked): " + currTargetComponent.getName());
+                    computePathToCurrentTargetComponent();
+                    this.memorizedTargetPosition = null;
+                    blocked = false;
+                }
+                return 0;
+            }
+            
             final Position freeNeighbouringPosition = findFreeNeighbouringPosition();
             if (freeNeighbouringPosition != null) {
                 LOGGER.info("Robot " + getName() + ": Moving to free position " + freeNeighbouringPosition);
@@ -237,13 +270,19 @@ public class Robot extends Component {
             if (currentPathPositions != null && !currentPathPositions.isEmpty()) {
                 LOGGER.info("Robot " + getName() + ": Path found with " + currentPathPositions.size() + " steps.");
                 currentPathPositionsIter = currentPathPositions.iterator();
+                pathNotFound = false;
+                blocked = false;
             } else {
                 LOGGER.warning("Robot " + getName() + ": No path found to " + currTargetComponent.getName());
                 currentPathPositionsIter = null;
+                pathNotFound = true;
+                blocked = true;
             }
         } catch (Exception e) {
             LOGGER.severe("Robot " + getName() + ": Error computing path: " + e.getMessage());
             e.printStackTrace();
+            pathNotFound = true;
+            blocked = true;
         }
     }
     
@@ -252,8 +291,24 @@ public class Robot extends Component {
         
         if (targetPosition == null) {
             LOGGER.info("Robot " + getName() + ": No target position (path exhausted or not computed)");
-            blocked = true;
-            return null;
+            // Vérifier si on est bloqué par un autre robot sur notre position actuelle
+            // Chercher les robots voisins qui pourraient nous bloquer
+            if (currTargetComponent != null && !hasReachedCurrentTarget()) {
+                // On n'a plus de chemin mais on n'a pas atteint la cible - recalculer
+                LOGGER.info("Robot " + getName() + ": Path exhausted but target not reached, recomputing path...");
+                computePathToCurrentTargetComponent();
+                targetPosition = getTargetPosition();
+                if (targetPosition != null) {
+                    // Continuer avec la nouvelle position
+                    LOGGER.info("Robot " + getName() + ": New path computed, target position: " + targetPosition);
+                } else {
+                    blocked = true;
+                    return null;
+                }
+            } else {
+                blocked = true;
+                return null;
+            }
         }
         
         LOGGER.info("Robot " + getName() + ": Target position is " + targetPosition);
@@ -308,10 +363,25 @@ public class Robot extends Component {
         final Component otherComponent = getFactory().getMobileComponentAt(memorizedTargetPosition, this);
 
         if (otherComponent instanceof Robot) {
-            return getPosition().equals(((Robot) otherComponent).getMemorizedTargetPosition());
+            Robot otherRobot = (Robot) otherComponent;
+            // Livelock classique : les deux robots veulent aller à la position de l'autre
+            if (getPosition().equals(otherRobot.getMemorizedTargetPosition())) {
+                return true;
+            }
+            // Nouveau cas : l'autre robot est définitivement bloqué (pathNotFound)
+            // Dans ce cas, on doit aussi contourner
+            if (otherRobot.isPathNotFound()) {
+                LOGGER.info("Robot " + getName() + ": Other robot " + otherRobot.getName() + " is permanently blocked, need to go around");
+                return true;
+            }
         }
         
         return false;
+    }
+    
+    @JsonIgnore
+    public boolean isPathNotFound() {
+        return pathNotFound;
     }
 
     private boolean hasReachedCurrentTarget() {
