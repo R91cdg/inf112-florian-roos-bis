@@ -92,12 +92,9 @@ public class RemoteSimulatorController implements CanvasViewerController {
 
     @Override
     public void setCanvas(Canvas canvasModel) {
-        // Cette méthode est appelée lors du chargement d'un fichier.
-        // On doit remplacer complètement le modèle pour avoir les bonnes dimensions, etc.
         Factory newFactory = (Factory) canvasModel;
         
         if (this.factoryModel != null) {
-            // On détache les observateurs de l'ancien modèle
             for (Observer observer : observers) {
                 this.factoryModel.removeObserver(observer);
             }
@@ -105,7 +102,6 @@ public class RemoteSimulatorController implements CanvasViewerController {
 
         this.factoryModel = newFactory;
 
-        // On rattache les observateurs au nouveau modèle
         if (this.factoryModel != null) {
             for (Observer observer : observers) {
                 this.factoryModel.addObserver(observer);
@@ -115,27 +111,18 @@ public class RemoteSimulatorController implements CanvasViewerController {
         refreshView();
     }
     
-    /**
-     * Méthode spécifique pour la mise à jour via le réseau.
-     * Elle ne remplace pas l'objet mais met à jour ses composants pour éviter le scintillement.
-     */
     private void updateModel(Factory remoteFactory) {
         if (this.factoryModel == null) return;
 
-        // Protection : si le serveur renvoie une liste vide (bug de sérialisation), on ignore
+        //Ignore if there is a serialization bug
         if (remoteFactory.getComponents() == null || remoteFactory.getComponents().isEmpty()) {
-            // LOGGER.warning("Received empty component list from server. Ignoring.");
             return;
         }
 
-        // NE PAS copier l'ID temporaire du serveur - garder l'ID original du modèle local
-        // pour que "Save Canvas" demande un nom si l'ID était null
-        // On ne copie l'ID que s'il n'est pas temporaire
         if (remoteFactory.getId() != null && !remoteFactory.getId().startsWith("temp_simulation_")) {
             this.factoryModel.setId(remoteFactory.getId());
         }
         
-        // Mise à jour des composants in-place
         if (this.factoryModel.getComponents() != null) {
             this.factoryModel.getComponents().clear();
             this.factoryModel.getComponents().addAll(remoteFactory.getComponents());
@@ -146,7 +133,6 @@ public class RemoteSimulatorController implements CanvasViewerController {
 
     private void refreshView() {
         for (Observer observer : observers) {
-            // Notifier l'observer que le modèle a changé (pour le flag modified)
             observer.modelChanged();
         }
     }
@@ -156,7 +142,6 @@ public class RemoteSimulatorController implements CanvasViewerController {
         return factoryModel;
     }
 
-    // ID temporaire utilisé pour la simulation avant sauvegarde explicite
     private String temporarySimulationId = null;
 
     @Override
@@ -167,18 +152,15 @@ public class RemoteSimulatorController implements CanvasViewerController {
             return;
         }
 
-        // Déterminer l'ID à utiliser pour la simulation
         String simulationId = factoryModel.getId();
         if (simulationId == null) {
-            // Créer un ID temporaire pour la simulation uniquement
             temporarySimulationId = "temp_simulation_" + System.currentTimeMillis();
             simulationId = temporarySimulationId;
             LOGGER.info("startAnimation: Using temporary simulation ID: " + simulationId);
         } else {
-            temporarySimulationId = null; // Pas besoin d'ID temporaire
+            temporarySimulationId = null; 
         }
 
-        // Envoyer au serveur de persistence avec l'ID de simulation
         uploadFactoryToPersistenceServer(factoryModel, simulationId);
 
         try {
@@ -203,8 +185,6 @@ public class RemoteSimulatorController implements CanvasViewerController {
              ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
              ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
             
-            // Envoyer un tableau [simulationId, factory] pour que le serveur utilise simulationId
-            // sans modifier l'ID original de la factory
             Object[] data = new Object[] { simulationId, factory };
             out.writeObject(data);
             out.flush();
@@ -221,7 +201,6 @@ public class RemoteSimulatorController implements CanvasViewerController {
         LOGGER.info("stopAnimation called");
         this.running = false;
         
-        // Utiliser l'ID de simulation (temporaire ou réel)
         String simulationId = (temporarySimulationId != null) ? temporarySimulationId : 
                               (factoryModel != null ? factoryModel.getId() : null);
         
@@ -235,7 +214,6 @@ public class RemoteSimulatorController implements CanvasViewerController {
             e.printStackTrace();
         }
         
-        // Nettoyer l'ID temporaire
         temporarySimulationId = null;
     }
 
@@ -252,7 +230,6 @@ public class RemoteSimulatorController implements CanvasViewerController {
     private void updateViewer() {
         LOGGER.info("Entering updateViewer loop");
         
-        // Utiliser l'ID de simulation (temporaire ou réel)
         String simulationId = (temporarySimulationId != null) ? temporarySimulationId : 
                               (factoryModel != null ? factoryModel.getId() : null);
         

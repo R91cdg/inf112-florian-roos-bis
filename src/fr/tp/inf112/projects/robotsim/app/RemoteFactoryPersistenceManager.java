@@ -29,9 +29,8 @@ public class RemoteFactoryPersistenceManager extends AbstractCanvasPersistenceMa
                 out.writeObject(canvasModel);
                 out.flush();
             } catch (IOException e) {
-                throw e; // Re-throw IOException
+                throw e; 
             } catch (Exception e) {
-                // Wrap other exceptions in a RuntimeException or handle appropriately
                 throw new RuntimeException(e);
             }
         }
@@ -59,7 +58,6 @@ public class RemoteFactoryPersistenceManager extends AbstractCanvasPersistenceMa
 
     @Override
     public boolean delete(Canvas canvasModel) {
-        // Not implemented as per instructions
         return false;
     }
 }

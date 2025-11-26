@@ -84,8 +84,6 @@ class ClientHandler extends Thread {
                 persistenceManager.persist(factory);
                 LOGGER.info("Factory persisted to server file system.");
             } else if (receivedObject instanceof Object[]) {
-                // Format: [simulationId (String), factory (Factory)]
-                // Utilisé pour sauvegarder avec un ID différent de celui de la factory
                 Object[] data = (Object[]) receivedObject;
                 if (data.length == 2 && data[0] instanceof String && data[1] instanceof Factory) {
                     String simulationId = (String) data[0];
@@ -94,10 +92,8 @@ class ClientHandler extends Thread {
                     
                     LOGGER.info("Received persist request with override ID: " + simulationId + " (original: " + originalId + ")");
                     
-                    // Temporairement définir l'ID pour la sauvegarde
                     factory.setId(simulationId);
                     persistenceManager.persist(factory);
-                    // Restaurer l'ID original
                     factory.setId(originalId);
                     
                     LOGGER.info("Factory persisted with ID: " + simulationId);
