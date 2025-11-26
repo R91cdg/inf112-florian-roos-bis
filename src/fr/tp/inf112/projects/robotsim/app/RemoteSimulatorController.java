@@ -143,9 +143,8 @@ public class RemoteSimulatorController implements CanvasViewerController {
 
     private void refreshView() {
         for (Observer observer : observers) {
-            if (observer instanceof java.awt.Component) {
-                ((java.awt.Component) observer).repaint();
-            }
+            // Notifier l'observer que le modèle a changé (pour le flag modified)
+            observer.modelChanged();
         }
     }
 
