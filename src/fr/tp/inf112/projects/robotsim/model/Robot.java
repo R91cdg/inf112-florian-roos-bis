@@ -146,7 +146,10 @@ public class Robot extends Component {
         
         // Si le robot est bloqué car aucun chemin n'a été trouvé, il reste immobile
         if (pathNotFound) {
-            blocked = true; // Assurer que le robot est affiché en rouge
+            if (!blocked) {
+                blocked = true; // Assurer que le robot est affiché en rouge
+                notifyObservers(); // Notifier pour mettre à jour l'affichage (couleur rouge)
+            }
             LOGGER.info("Robot " + getName() + ": Permanently blocked - no path to " + currTargetComponent.getName());
             return false;
         }
@@ -377,6 +380,21 @@ public class Robot extends Component {
         }
         
         return false;
+    }
+    
+    /**
+     * Indique si le robot est bloqué (pour l'affichage en rouge).
+     * Ne pas marquer avec @JsonIgnore pour que Jackson puisse le sérialiser.
+     */
+    public boolean isBlocked() {
+        return blocked;
+    }
+    
+    /**
+     * Setter pour Jackson désérialisation.
+     */
+    public void setBlocked(boolean blocked) {
+        this.blocked = blocked;
     }
     
     @JsonIgnore
