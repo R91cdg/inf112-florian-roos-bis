@@ -136,19 +136,25 @@ public class Robot extends Component {
         }
 
         if (getTargetComponents().isEmpty()) {
+            LOGGER.fine("Robot " + getName() + ": No target components");
             return false;
         }
         
         if (currTargetComponent == null || hasReachedCurrentTarget()) {
+            if (currTargetComponent != null) {
+                LOGGER.info("Robot " + getName() + " REACHED target: " + currTargetComponent.getName() + " at position " + getPosition());
+            }
             currTargetComponent = nextTargetComponentToVisit();
             
             if (currTargetComponent != null) {
-                LOGGER.info("Robot " + getName() + " targeting: " + currTargetComponent.getName());
+                LOGGER.info("Robot " + getName() + " NEW TARGET: " + currTargetComponent.getName() + " at position " + currTargetComponent.getPosition());
                 computePathToCurrentTargetComponent();
             }
         }
 
-        return moveToNextPathPosition() != 0;
+        int displacement = moveToNextPathPosition();
+        LOGGER.fine("Robot " + getName() + " displacement: " + displacement + ", position: " + getPosition() + ", blocked: " + blocked);
+        return displacement != 0;
     }
         
     private Component nextTargetComponentToVisit() {
@@ -161,19 +167,41 @@ public class Robot extends Component {
     
     private int moveToNextPathPosition() {
         final Motion motion = computeMotion();
+        
+        if (motion == null) {
+            LOGGER.info("Robot " + getName() + ": No motion computed (null), blocked=" + blocked + ", memorizedTargetPosition=" + memorizedTargetPosition);
+        } else {
+            LOGGER.info("Robot " + getName() + ": Motion from " + motion.getCurrentPosition() + " to " + motion.getTargetPosition());
+        }
+        
         int displacement = motion == null ? 0 : getFactory().moveComponent(motion, this);
 
         if (displacement != 0) {
+            blocked = false;
+            LOGGER.info("Robot " + getName() + ": Moved successfully, displacement=" + displacement + ", new position=" + getPosition());
             notifyObservers();
         }
         else if (isLivelyLocked()) {
-            // CORRECTION TYPO ICI : freeNeighbouringPosition
+            LOGGER.info("Robot " + getName() + ": LIVELOCK DETECTED at position " + getPosition());
             final Position freeNeighbouringPosition = findFreeNeighbouringPosition();
             if (freeNeighbouringPosition != null) {
-                this.nextPosition = freeNeighbouringPosition; 
-                displacement = moveToNextPathPosition(); 
-                computePathToCurrentTargetComponent(); 
+                LOGGER.info("Robot " + getName() + ": Moving to free position " + freeNeighbouringPosition);
+                this.nextPosition = freeNeighbouringPosition;
+                this.memorizedTargetPosition = null;
+                final Motion escapeMotion = new Motion(getPosition(), freeNeighbouringPosition);
+                displacement = getFactory().moveComponent(escapeMotion, this);
+                if (displacement != 0) {
+                    blocked = false;
+                    notifyObservers();
+                    computePathToCurrentTargetComponent();
+                } else {
+                    LOGGER.warning("Robot " + getName() + ": Failed to escape livelock");
+                }
+            } else {
+                LOGGER.warning("Robot " + getName() + ": No free neighbouring position found to escape livelock");
             }
+        } else {
+            LOGGER.info("Robot " + getName() + ": Blocked but no livelock, waiting... memorizedTargetPosition=" + memorizedTargetPosition);
         }
         return displacement;
     }
@@ -203,6 +231,7 @@ public class Robot extends Component {
 
     private void computePathToCurrentTargetComponent() {
         try {
+            LOGGER.info("Robot " + getName() + ": Computing path from " + getPosition() + " to " + currTargetComponent.getName() + " at " + currTargetComponent.getPosition());
             final List<Position> currentPathPositions = pathFinder.findPath(this, currTargetComponent);
             
             if (currentPathPositions != null && !currentPathPositions.isEmpty()) {
@@ -222,9 +251,12 @@ public class Robot extends Component {
         Position targetPosition = getTargetPosition();
         
         if (targetPosition == null) {
+            LOGGER.info("Robot " + getName() + ": No target position (path exhausted or not computed)");
             blocked = true;
             return null;
         }
+        
+        LOGGER.info("Robot " + getName() + ": Target position is " + targetPosition);
         
         final PositionedShape shape = new RectangularShape(targetPosition.getxCoordinate(),
                                                            targetPosition.getyCoordinate(),
@@ -232,11 +264,14 @@ public class Robot extends Component {
                                                               2);
         
         if (getFactory().hasMobileComponentAt(shape, this)) {
+            LOGGER.info("Robot " + getName() + ": Another robot is at target position " + targetPosition);
             this.memorizedTargetPosition = targetPosition;
+            blocked = true;
             return null;
         }
 
         this.memorizedTargetPosition = null;
+        blocked = false;
             
         return new Motion(getPosition(), targetPosition);
     }
@@ -245,17 +280,22 @@ public class Robot extends Component {
         if (this.nextPosition != null) {
             Position temp = this.nextPosition;
             this.nextPosition = null;
+            LOGGER.info("Robot " + getName() + ": Using nextPosition (escape position) " + temp);
             return temp;
         }
 
         if (this.memorizedTargetPosition != null) {
+            LOGGER.info("Robot " + getName() + ": Using memorizedTargetPosition " + memorizedTargetPosition);
             return this.memorizedTargetPosition;
         }
 
         if (currentPathPositionsIter != null && currentPathPositionsIter.hasNext()) {
-            return currentPathPositionsIter.next();
+            Position next = currentPathPositionsIter.next();
+            LOGGER.info("Robot " + getName() + ": Next position from path " + next);
+            return next;
         }
 
+        LOGGER.info("Robot " + getName() + ": No more positions in path (iterator null or empty)");
         return null;
     }
     
@@ -265,10 +305,9 @@ public class Robot extends Component {
             return false;
         }
             
-        final Component otherComponent = getFactory().getMobileComponentAt(memorizedTargetPosition,     
-                                                                       this);
+        final Component otherComponent = getFactory().getMobileComponentAt(memorizedTargetPosition, this);
 
-        if (otherComponent instanceof Robot)  {
+        if (otherComponent instanceof Robot) {
             return getPosition().equals(((Robot) otherComponent).getMemorizedTargetPosition());
         }
         
