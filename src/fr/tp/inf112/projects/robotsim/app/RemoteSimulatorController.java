@@ -128,7 +128,10 @@ public class RemoteSimulatorController implements CanvasViewerController {
             return;
         }
 
-        if (remoteFactory.getId() != null) {
+        // NE PAS copier l'ID temporaire du serveur - garder l'ID original du modèle local
+        // pour que "Save Canvas" demande un nom si l'ID était null
+        // On ne copie l'ID que s'il n'est pas temporaire
+        if (remoteFactory.getId() != null && !remoteFactory.getId().startsWith("temp_simulation_")) {
             this.factoryModel.setId(remoteFactory.getId());
         }
         
@@ -153,6 +156,9 @@ public class RemoteSimulatorController implements CanvasViewerController {
         return factoryModel;
     }
 
+    // ID temporaire utilisé pour la simulation avant sauvegarde explicite
+    private String temporarySimulationId = null;
+
     @Override
     public void startAnimation() {
         LOGGER.info("startAnimation called");
@@ -161,36 +167,46 @@ public class RemoteSimulatorController implements CanvasViewerController {
             return;
         }
 
-        if (factoryModel.getId() == null) {
-            LOGGER.warning("startAnimation: Factory ID is NULL. Defaulting to 'autosave.factory'");
-            factoryModel.setId("autosave.factory");
+        // Déterminer l'ID à utiliser pour la simulation
+        String simulationId = factoryModel.getId();
+        if (simulationId == null) {
+            // Créer un ID temporaire pour la simulation uniquement
+            temporarySimulationId = "temp_simulation_" + System.currentTimeMillis();
+            simulationId = temporarySimulationId;
+            LOGGER.info("startAnimation: Using temporary simulation ID: " + simulationId);
+        } else {
+            temporarySimulationId = null; // Pas besoin d'ID temporaire
         }
 
-        uploadFactoryToPersistenceServer(factoryModel);
+        // Envoyer au serveur de persistence avec l'ID de simulation
+        uploadFactoryToPersistenceServer(factoryModel, simulationId);
 
         try {
-            URI uri = new URI("http", null, "localhost", 8081, "/simulation/start/" + factoryModel.getId(), null, null);
+            URI uri = new URI("http", null, "localhost", 8081, "/simulation/start/" + simulationId, null, null);
             HttpRequest request = HttpRequest.newBuilder().uri(uri).POST(HttpRequest.BodyPublishers.noBody()).build();
             httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             
             this.running = true;
             new Thread(this::updateViewer).start();
-            LOGGER.info("Animation thread started for Factory ID: " + factoryModel.getId());
+            LOGGER.info("Animation thread started for Factory ID: " + simulationId);
             
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void uploadFactoryToPersistenceServer(Factory factory) {
+    private void uploadFactoryToPersistenceServer(Factory factory, String simulationId) {
         int componentCount = (factory.getComponents() != null) ? factory.getComponents().size() : 0;
-        LOGGER.info("Uploading factory '" + factory.getId() + "' with " + componentCount + " components to Persistence Server...");
+        LOGGER.info("Uploading factory with simulation ID '" + simulationId + "' (" + componentCount + " components) to Persistence Server...");
         
         try (Socket socket = new Socket("localhost", 51100);
              ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
              ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
             
-            out.writeObject(factory);
+            // Envoyer un tableau [simulationId, factory] pour que le serveur utilise simulationId
+            // sans modifier l'ID original de la factory
+            Object[] data = new Object[] { simulationId, factory };
+            out.writeObject(data);
             out.flush();
             LOGGER.info("Factory upload completed.");
             
@@ -204,14 +220,23 @@ public class RemoteSimulatorController implements CanvasViewerController {
     public void stopAnimation() {
         LOGGER.info("stopAnimation called");
         this.running = false;
-        if (factoryModel == null || factoryModel.getId() == null) return;
+        
+        // Utiliser l'ID de simulation (temporaire ou réel)
+        String simulationId = (temporarySimulationId != null) ? temporarySimulationId : 
+                              (factoryModel != null ? factoryModel.getId() : null);
+        
+        if (simulationId == null) return;
+        
         try {
-             URI uri = new URI("http", null, "localhost", 8081, "/simulation/stop/" + factoryModel.getId(), null, null);
+             URI uri = new URI("http", null, "localhost", 8081, "/simulation/stop/" + simulationId, null, null);
              HttpRequest request = HttpRequest.newBuilder().uri(uri).POST(HttpRequest.BodyPublishers.noBody()).build();
              httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (URISyntaxException | IOException | InterruptedException e) {
             e.printStackTrace();
         }
+        
+        // Nettoyer l'ID temporaire
+        temporarySimulationId = null;
     }
 
     @Override
@@ -226,10 +251,20 @@ public class RemoteSimulatorController implements CanvasViewerController {
 
     private void updateViewer() {
         LOGGER.info("Entering updateViewer loop");
+        
+        // Utiliser l'ID de simulation (temporaire ou réel)
+        String simulationId = (temporarySimulationId != null) ? temporarySimulationId : 
+                              (factoryModel != null ? factoryModel.getId() : null);
+        
+        if (simulationId == null) {
+            LOGGER.severe("updateViewer: No simulation ID available");
+            return;
+        }
+        
         while (this.running) {
             try {
                 long start = System.currentTimeMillis();
-                final URI uri = new URI("http", null, "localhost", 8081, "/simulation/" + factoryModel.getId(), null, null);
+                final URI uri = new URI("http", null, "localhost", 8081, "/simulation/" + simulationId, null, null);
                 HttpRequest request = HttpRequest.newBuilder()
                         .uri(uri)
                         .header("Accept", "application/json")
